@@ -3,6 +3,7 @@ package org.pyj.demo.handler;
 import org.pyj.http.NettyHttpRequest;
 import org.pyj.http.annotation.NettyHttpHandler;
 import org.pyj.http.handler.IFunctionHandler;
+import org.pyj.http.handler.Result;
 
 /**
  * @Description: http接口，向对应用户发送消息
@@ -10,11 +11,11 @@ import org.pyj.http.handler.IFunctionHandler;
  * @Date: 2020-04-05 10:14
  */
 @NettyHttpHandler(path = "/temp/body",method = "POST")
-public class TempHandler implements IFunctionHandler<Object> {
+public class TempHandler implements IFunctionHandler<String> {
 
     @Override
-    public Object execute(NettyHttpRequest request) {
+    public Result<String> execute(NettyHttpRequest request) {
         String contentText = request.contentText();
-        return contentText;
+        return new ResultJson<String>(200, contentText);
     }
 }

@@ -24,4 +24,7 @@ hs_err_pid*
 .idea
 *.iml
 target/
+demo/target/
 .DS_Store
+
+#demo/

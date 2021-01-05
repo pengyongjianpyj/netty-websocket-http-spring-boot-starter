@@ -30,8 +30,6 @@ import org.yeauty.support.WsPathMatcher;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -70,12 +68,6 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
     public ServerEndpointConfig getConfig() {
         return config;
     }
-
-    private ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
-        Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-        thread.setName(HttpServerHandler.class.getSimpleName() + thread.getName());
-        return thread;
-    });
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
@@ -247,7 +239,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
      */
     private void channelReadHttp(ChannelHandlerContext ctx, FullHttpRequest request) {
         FullHttpRequest copyRequest = request.copy();
-        executor.execute(() -> onReceivedRequest(ctx,new NettyHttpRequest(copyRequest)));
+        ctx.executor().execute(() -> onReceivedRequest(ctx,new NettyHttpRequest(copyRequest)));
     }
 
     private void onReceivedRequest(ChannelHandlerContext context, NettyHttpRequest request){

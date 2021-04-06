@@ -24,7 +24,90 @@ WebSocket和Http使用统一端口（默认8080），方便网络方面的管理
     </dependency>
 ```
 
-- 在端点类上加上`@ServerEndpoint`注解，并在相应的方法上加上`@BeforeHandshake`、`@OnOpen`、`@OnClose`、`@OnError`、`@OnMessage`、`@OnBinary`、`@OnEvent`注解，样例如下：
+- spring-boot启动类
+
+```java
+import org.pyj.http.annotation.NettyHttpHandler;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScan.Filter;
+
+@SpringBootApplication
+@ComponentScan(includeFilters = @Filter(NettyHttpHandler.class))
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+- restful风格的http返回结果实现类
+
+```java
+import org.pyj.http.handler.Result;
+import java.io.Serializable;
+
+public class ResultJson<T> implements Result<T>, Serializable {
+
+    private static final long serialVersionUID = 1;
+
+    private int code;
+
+    private T t;
+
+    public ResultJson(int code, T t) {
+        this.code = code;
+        this.t = t;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public T getT() {
+        return t;
+    }
+
+    public void setT(T t) {
+        this.t = t;
+    }
+
+    @Override
+    public String toString() {
+        return "ResultJson{" +
+                "code=" + code +
+                ", t=" + t +
+                '}';
+    }
+}
+```
+
+- http表现层接口类
+
+```java
+import org.pyj.http.NettyHttpRequest;
+import org.pyj.http.annotation.NettyHttpHandler;
+import org.pyj.http.handler.IFunctionHandler;
+import org.pyj.http.handler.Result;
+
+@NettyHttpHandler(path = "/temp/body",method = "POST")
+public class TempHandler implements IFunctionHandler<String> {
+
+    @Override
+    public Result<String> execute(NettyHttpRequest request) {
+        String contentText = request.contentText();
+        return new ResultJson<String>(200, contentText);
+    }
+}
+```
+
+
+- websocket入口类 在端点类上加上`@ServerEndpoint`注解，并在相应的方法上加上`@BeforeHandshake`、`@OnOpen`、`@OnClose`、`@OnError`、`@OnMessage`、`@OnBinary`、`@OnEvent`注解，样例如下：
 
 ```java
 @ServerEndpoint(port = "${server.port}", path = "/connect")

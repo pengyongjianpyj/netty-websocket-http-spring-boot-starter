@@ -33,5 +33,6 @@ public class WebSocket {
 
     @OnMessage
     public void OnMessage(Session session, String message) {
+        System.out.println(message);
     }
 }

@@ -1,7 +1,6 @@
 package org.pyj.config;
 
 import org.pyj.ServerEndpointExporter;
-import org.pyj.WebsocketServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,10 +14,5 @@ public class WebSocketNettyConfig {
     @Bean
     public ServerEndpointExporter serverEndpointExporter() {
         return new ServerEndpointExporter();
-    }
-
-    @Bean
-    public WebsocketServer websocketServer() {
-        return new WebsocketServer();
     }
 }

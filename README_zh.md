@@ -6,7 +6,7 @@ netty-websocket-http-spring-boot-starter [![License](http://img.shields.io/:lice
 ### 简介
 本项目帮助你在spring-boot中使用Netty来开发WebSocket服务器，并像spring-websocket的注解开发一样简单，还可以帮助你在spring-boot中使用Netty来开发简单的Http服务器
 
-项目启动及其迅捷，经测试启动时间在1s左右。
+项目启动及其迅捷，经测试启动时间在1s左右;无业务逻辑http接口相应时间在4ms左右。
 
 WebSocket和Http使用统一端口（默认8080），方便网络方面的管理，另外本项目可用作微服务，只需添加注册发现相关依赖即可
 

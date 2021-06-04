@@ -5,6 +5,7 @@ import org.pyj.http.NettyHttpRequest;
 import org.pyj.http.annotation.NettyHttpHandler;
 import org.pyj.http.handler.IFunctionHandler;
 import org.pyj.http.handler.Result;
+import org.pyj.http.handler.ResultJson;
 
 /**
  * @Description: http接口，参数化路径接口示例

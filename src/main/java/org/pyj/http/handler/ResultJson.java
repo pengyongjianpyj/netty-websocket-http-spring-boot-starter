@@ -1,15 +1,11 @@
-package org.pyj.demo.handler;
-
-import org.pyj.http.handler.Result;
-
-import java.io.Serializable;
+package org.pyj.http.handler;
 
 /**
  * @author pengyongjian
  * @Description:
  * @date 2020/12/21 下午3:51
  */
-public class ResultJson<T> implements Result<T>, Serializable {
+public class ResultJson<T> implements Result<T> {
 
     private static final long serialVersionUID = 1;
 

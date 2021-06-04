@@ -1,4 +1,3 @@
-
 package org.pyj.http.handler;
 
 
@@ -10,5 +9,5 @@ import org.pyj.http.NettyHttpRequest;
  * @Date: 2020-04-05 10:14
  */
 public interface IFunctionHandler<T> {
-    Result<T> execute(NettyHttpRequest request);
+  Result<T> execute(NettyHttpRequest request);
 }

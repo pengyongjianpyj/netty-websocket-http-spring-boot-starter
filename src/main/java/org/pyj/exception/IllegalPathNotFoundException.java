@@ -1,4 +1,3 @@
-
 package org.pyj.exception;
 
 /**
@@ -7,7 +6,7 @@ package org.pyj.exception;
  * @Date: 2020-04-05 10:14
  */
 public class IllegalPathNotFoundException extends Exception {
-    public IllegalPathNotFoundException() {
-        super("PATH NOT FOUND");
-    }
+  public IllegalPathNotFoundException() {
+    super("PATH NOT FOUND");
+  }
 }

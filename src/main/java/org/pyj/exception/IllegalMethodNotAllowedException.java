@@ -1,4 +1,3 @@
-
 package org.pyj.exception;
 
 /**
@@ -7,7 +6,7 @@ package org.pyj.exception;
  * @Date: 2020-04-05 10:14
  */
 public class IllegalMethodNotAllowedException extends Exception {
-    public IllegalMethodNotAllowedException() {
-        super("METHOD NOT ALLOWED");
-    }
+  public IllegalMethodNotAllowedException() {
+    super("METHOD NOT ALLOWED");
+  }
 }

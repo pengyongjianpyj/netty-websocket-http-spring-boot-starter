@@ -20,23 +20,29 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.pyj.config.WebProperties;
 import org.pyj.exception.IllegalPathDuplicatedException;
 import org.pyj.http.annotation.NettyHttpHandler;
 import org.pyj.http.handler.IFunctionHandler;
 import org.pyj.http.path.Path;
+import org.pyj.yeauty.annotation.ServerPath;
+import org.pyj.exception.DeploymentException;
+import org.pyj.yeauty.pojo.PojoEndpointServer;
+import org.pyj.yeauty.pojo.PojoMethodMapping;
+import org.pyj.config.ServerEndpointConfig;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.beans.factory.config.BeanExpressionResolver;
 import org.springframework.beans.factory.support.AbstractBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ApplicationObjectSupport;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.yeauty.annotation.ServerEndpoint;
-import org.yeauty.exception.DeploymentException;
-import org.yeauty.pojo.PojoEndpointServer;
-import org.yeauty.pojo.PojoMethodMapping;
-import org.yeauty.standard.ServerEndpointConfig;
 
 /**
  * @author pengyongjian
@@ -44,13 +50,20 @@ import org.yeauty.standard.ServerEndpointConfig;
  * @date 2020-03-17 15:52
  */
 @Slf4j
-public class ServerEndpointExporter extends org.yeauty.standard.ServerEndpointExporter {
+public class ServerEndpointExporter extends ApplicationObjectSupport
+    implements SmartInitializingSingleton, BeanFactoryAware {
+
+  @Autowired
+  private WebProperties webProperties;
+
+  @Value("${server.port}")
+  private Integer port;
 
   private AbstractBeanFactory beanFactory;
 
   @Override
   public void afterSingletonsInstantiated() {
-    registerEndpoint();
+    runServer();
   }
 
   @Override
@@ -62,44 +75,47 @@ public class ServerEndpointExporter extends org.yeauty.standard.ServerEndpointEx
     this.beanFactory = (AbstractBeanFactory) beanFactory;
   }
 
-  private void registerEndpoint() {
+  private void runServer() {
+    // 获取配置信息并封装到serverEndpointConfig中
+    ServerEndpointConfig serverEndpointConfig = buildConfig();
     // 获取websocket类，及其注解配置信息
     ApplicationContext context = getApplicationContext();
-    String[] endpointBeanNames = context.getBeanNamesForAnnotation(ServerEndpoint.class);
-    if (endpointBeanNames.length > 1) {
-      logger.error("<artifactId>netty-websocket-spring-boot-starter</artifactId> too many @ServerEndpoint class ");
-    }
+    String[] endpointBeanNames = context.getBeanNamesForAnnotation(ServerPath.class);
     if (endpointBeanNames.length == 0) {
       logger.error("<artifactId>netty-websocket-spring-boot-starter</artifactId> no @ServerEndpoint class ");
     }
-    Class<?> endpointClass = context.getType(endpointBeanNames[0]);
 
-    ServerEndpoint annotation = AnnotatedElementUtils.findMergedAnnotation(endpointClass, ServerEndpoint.class);
-    if (annotation == null) {
-      throw new IllegalStateException("missingAnnotation ServerEndpoint");
-    }
-    // 获取配置信息并封装到serverEndpointConfig中
-    ServerEndpointConfig serverEndpointConfig = buildConfig(annotation);
-    // 获取websocket方法并生成映射pojoMethodMapping
-    PojoMethodMapping pojoMethodMapping = null;
-    try {
-      pojoMethodMapping = new PojoMethodMapping(endpointClass, context, beanFactory);
-    } catch (DeploymentException e) {
-      throw new IllegalStateException("Failed to register ServerEndpointConfig: " + serverEndpointConfig, e);
-    }
-    // 解析获取websocket的路径path
-    String path = resolveAnnotationValue(annotation.value(), String.class, "path");
     // 创建websocket的业务对象
-    PojoEndpointServer pojoEndpointServer = new PojoEndpointServer(pojoMethodMapping, serverEndpointConfig, path);
-    // 获取http接口的路径接口映射关系
-    Map<Path, IFunctionHandler> functionHandlerMap = getFunctionHandlerMap();
+    PojoEndpointServer pojoEndpointServer = new PojoEndpointServer(serverEndpointConfig);
+    for (String endpointBeanName : endpointBeanNames) {
+      Class<?> endpointClass = context.getType(endpointBeanName);
+      ServerPath annotation = AnnotatedElementUtils.findMergedAnnotation(endpointClass, ServerPath.class);
+      if (annotation == null) {
+        throw new IllegalStateException("missingAnnotation ServerEndpoint");
+      }
+      // 解析获取websocket的路径path
+      String path = resolveAnnotationValue(annotation.value(), String.class, "path");
+
+
+      // 获取websocket方法并生成映射pojoMethodMapping
+      PojoMethodMapping pojoMethodMapping = null;
+      try {
+        pojoMethodMapping = new PojoMethodMapping(endpointClass, context, beanFactory);
+      } catch (DeploymentException e) {
+        throw new IllegalStateException("Failed to register ServerEndpointConfig: " + serverEndpointConfig, e);
+      }
+      pojoEndpointServer.addPathPojoMethodMapping(path, pojoMethodMapping);
+    }
     // 创建处理业务类对象
     WebSocketServerHandler webSocketServerHandler = new WebSocketServerHandler(pojoEndpointServer);
+    // 获取http接口的路径接口映射关系
+    Map<Path, IFunctionHandler> functionHandlerMap = getFunctionHandlerMap();
     // 创建http处理业务类对象
     HttpServerHandler httpServerHandler = new HttpServerHandler(pojoEndpointServer, serverEndpointConfig,
         functionHandlerMap, webSocketServerHandler);
     // netty的web容器的启动
     init(serverEndpointConfig.getPort(), httpServerHandler);
+
   }
 
   private void init(int port, HttpServerHandler httpServerHandler) {
@@ -167,58 +183,37 @@ public class ServerEndpointExporter extends org.yeauty.standard.ServerEndpointEx
     }
   }
 
-  private ServerEndpointConfig buildConfig(ServerEndpoint annotation) {
-    String host = resolveAnnotationValue(annotation.host(), String.class, "host");
-    int port = resolveAnnotationValue(annotation.port(), Integer.class, "port");
-    String path = resolveAnnotationValue(annotation.value(), String.class, "value");
-    int bossLoopGroupThreads =
-        resolveAnnotationValue(annotation.bossLoopGroupThreads(), Integer.class, "bossLoopGroupThreads");
-    int workerLoopGroupThreads =
-        resolveAnnotationValue(annotation.workerLoopGroupThreads(), Integer.class, "workerLoopGroupThreads");
-    boolean useCompressionHandler =
-        resolveAnnotationValue(annotation.useCompressionHandler(), Boolean.class, "useCompressionHandler");
-
-    int optionConnectTimeoutMillis =
-        resolveAnnotationValue(annotation.optionConnectTimeoutMillis(), Integer.class, "optionConnectTimeoutMillis");
-    int optionSoBacklog = resolveAnnotationValue(annotation.optionSoBacklog(), Integer.class, "optionSoBacklog");
-
-    int childOptionWriteSpinCount =
-        resolveAnnotationValue(annotation.childOptionWriteSpinCount(), Integer.class, "childOptionWriteSpinCount");
-    int childOptionWriteBufferHighWaterMark =
-        resolveAnnotationValue(annotation.childOptionWriteBufferHighWaterMark(), Integer.class,
-            "childOptionWriteBufferHighWaterMark");
-    int childOptionWriteBufferLowWaterMark =
-        resolveAnnotationValue(annotation.childOptionWriteBufferLowWaterMark(), Integer.class,
-            "childOptionWriteBufferLowWaterMark");
-    int childOptionSoRcvbuf =
-        resolveAnnotationValue(annotation.childOptionSoRcvbuf(), Integer.class, "childOptionSoRcvbuf");
-    int childOptionSoSndbuf =
-        resolveAnnotationValue(annotation.childOptionSoSndbuf(), Integer.class, "childOptionSoSndbuf");
-    boolean childOptionTcpNodelay =
-        resolveAnnotationValue(annotation.childOptionTcpNodelay(), Boolean.class, "childOptionTcpNodelay");
-    boolean childOptionSoKeepalive =
-        resolveAnnotationValue(annotation.childOptionSoKeepalive(), Boolean.class, "childOptionSoKeepalive");
-    int childOptionSoLinger =
-        resolveAnnotationValue(annotation.childOptionSoLinger(), Integer.class, "childOptionSoLinger");
-    boolean childOptionAllowHalfClosure =
-        resolveAnnotationValue(annotation.childOptionAllowHalfClosure(), Boolean.class, "childOptionAllowHalfClosure");
-
-    int readerIdleTimeSeconds =
-        resolveAnnotationValue(annotation.readerIdleTimeSeconds(), Integer.class, "readerIdleTimeSeconds");
-    int writerIdleTimeSeconds =
-        resolveAnnotationValue(annotation.writerIdleTimeSeconds(), Integer.class, "writerIdleTimeSeconds");
-    int allIdleTimeSeconds =
-        resolveAnnotationValue(annotation.allIdleTimeSeconds(), Integer.class, "allIdleTimeSeconds");
-
-    int maxFramePayloadLength =
-        resolveAnnotationValue(annotation.maxFramePayloadLength(), Integer.class, "maxFramePayloadLength");
-
-    ServerEndpointConfig serverEndpointConfig =
-        new ServerEndpointConfig(host, port, path, bossLoopGroupThreads, workerLoopGroupThreads, useCompressionHandler,
-            optionConnectTimeoutMillis, optionSoBacklog, childOptionWriteSpinCount, childOptionWriteBufferHighWaterMark,
-            childOptionWriteBufferLowWaterMark, childOptionSoRcvbuf, childOptionSoSndbuf, childOptionTcpNodelay,
-            childOptionSoKeepalive, childOptionSoLinger, childOptionAllowHalfClosure, readerIdleTimeSeconds,
-            writerIdleTimeSeconds, allIdleTimeSeconds, maxFramePayloadLength);
+  private ServerEndpointConfig buildConfig() {
+    ServerEndpointConfig serverEndpointConfig = new ServerEndpointConfig(webProperties.getHost(), port,
+        webProperties.getBossLoopGroupThreads(),
+        webProperties.getWorkerLoopGroupThreads(),
+        webProperties.getUseCompressionHandler(),
+        webProperties.getOptionConnectTimeoutMillis(),
+        webProperties.getOptionSoBacklog(),
+        webProperties.getChildOptionWriteSpinCount(),
+        webProperties.getChildOptionWriteBufferHighWaterMark(),
+        webProperties.getChildOptionWriteBufferLowWaterMark(),
+        webProperties.getChildOptionSoRcvbuf(),
+        webProperties.getChildOptionSoSndbuf(),
+        webProperties.getChildOptionTcpNodelay(),
+        webProperties.getChildOptionSoKeepalive(),
+        webProperties.getChildOptionSoLinger(),
+        webProperties.getChildOptionAllowHalfClosure(),
+        webProperties.getReaderIdleTimeSeconds(),
+        webProperties.getWriterIdleTimeSeconds(),
+        webProperties.getAllIdleTimeSeconds(),
+        webProperties.getMaxFramePayloadLength(),
+        webProperties.getUseEventExecutorGroup(),
+        webProperties.getEventExecutorGroupThreads(),
+        webProperties.getSslKeyPassword(),
+        webProperties.getSslKeyStore(),
+        webProperties.getSslKeyStorePassword(),
+        webProperties.getSslKeyStoreType(),
+        webProperties.getSslTrustStore(),
+        webProperties.getSslTrustStorePassword(),
+        webProperties.getSslTrustStoreType(),
+        webProperties.getCorsOrigins(),
+        webProperties.getCorsAllowCredentials());
 
     return serverEndpointConfig;
   }

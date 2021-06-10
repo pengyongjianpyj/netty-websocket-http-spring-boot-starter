@@ -22,8 +22,8 @@
     </developers>
 
     <properties>
-        <netty-websocket.version>0.9.5</netty-websocket.version>
         <spring-boot.version>2.0.0.RELEASE</spring-boot.version>
+        <netty.version>4.1.59.Final</netty.version>
         <lombok.version>1.18.2</lombok.version>
         <slf4j.version>1.7.12</slf4j.version>
     </properties>
@@ -50,9 +50,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.yeauty</groupId>
-            <artifactId>netty-websocket-spring-boot-starter</artifactId>
-            <version>${netty-websocket.version}</version>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
         </dependency>
 
         <dependency>

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author pengyongjian
- * @Description: websocket配置类，用于启动websocket
+ * @Description: 配置类，用于启动服务
  * @date 2020-03-16 14:04
  */
 @Configuration
@@ -14,5 +14,10 @@ public class WebSocketNettyConfig {
   @Bean
   public ServerEndpointExporter serverEndpointExporter() {
     return new ServerEndpointExporter();
+  }
+
+  @Bean
+  public WebProperties webProperties() {
+    return new WebProperties();
   }
 }

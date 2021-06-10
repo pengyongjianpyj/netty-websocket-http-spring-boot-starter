@@ -65,10 +65,10 @@ public class TempHandler implements IFunctionHandler<String> {
 ```
 
 
-- websocket入口类 在端点类上加上`@ServerEndpoint`注解，并在相应的方法上加上`@BeforeHandshake`、`@OnOpen`、`@OnClose`、`@OnError`、`@OnMessage`、`@OnBinary`、`@OnEvent`注解，样例如下：
+- websocket入口类 在端点类上加上`@ServerPath`注解，并在相应的方法上加上`@BeforeHandshake`、`@OnOpen`、`@OnClose`、`@OnError`、`@OnMessage`、`@OnBinary`、`@OnEvent`注解，样例如下：
 
 ```java
-@ServerEndpoint(port = "${server.port}", path = "/connect")
+@ServerPath(path = "/connect")
 public class MyWebSocket {
 
     @BeforeHandshake
@@ -137,10 +137,10 @@ public class MyWebSocket {
 
 
 ### 注解
-###### @ServerEndpoint 
-> 当ServerEndpointExporter类通过Spring配置进行声明并被使用，它将会去扫描带有@ServerEndpoint注解的类
-> 被注解的类将被注册成为一个WebSocket端点
-> 所有的[配置项](#%E9%85%8D%E7%BD%AE)都在这个注解的属性中 ( 如:`@ServerEndpoint(port = "${server.port}", path = "/connect")` )
+###### @ServerPath 
+> 当ServerEndpointExporter类通过Spring配置进行声明并被使用，它将会去扫描带有@ServerPath注解的类
+> 被注解的类将被注册成为一个WebSocket的connect路由的控制中心
+> 路由的url可以有由注解指定 ( 如:`@ServerPath(path = "/connect")` )
 
 ###### @BeforeHandshake 
 > 当有新的连接进入时，对该方法进行回调

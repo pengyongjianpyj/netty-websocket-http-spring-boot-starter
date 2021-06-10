@@ -94,7 +94,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         throw new IllegalStateException("missingAnnotation ServerEndpoint");
       }
       // 解析获取websocket的路径path
-      String path = resolveAnnotationValue(annotation.value(), String.class, "path");
+      String path = annotation.value();
 
 
       // 获取websocket方法并生成映射pojoMethodMapping
@@ -177,7 +177,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         boss.shutdownGracefully().syncUninterruptibly();
         worker.shutdownGracefully().syncUninterruptibly();
       }));
-      logger.info("=====Netty WebSocket started on port:" + port + " =====");
+      logger.info("===== Netty WebSocket started on port:" + port + " =====");
     } catch (Exception e) {
       logger.error("websocket init fail", e);
     }
@@ -216,32 +216,6 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         webProperties.getCorsAllowCredentials());
 
     return serverEndpointConfig;
-  }
-
-  private <T> T resolveAnnotationValue(Object value, Class<T> requiredType, String paramName) {
-    if (value == null) {
-      return null;
-    }
-    TypeConverter typeConverter = beanFactory.getTypeConverter();
-    if (typeConverter == null) {
-      throw new IllegalArgumentException(
-          "TypeConverter of AbstractBeanFactory is null: " + beanFactory);
-    }
-    if (value instanceof String) {
-      String strVal = beanFactory.resolveEmbeddedValue((String) value);
-      BeanExpressionResolver beanExpressionResolver = beanFactory.getBeanExpressionResolver();
-      if (beanExpressionResolver != null) {
-        value = beanExpressionResolver.evaluate(strVal, new BeanExpressionContext(beanFactory, null));
-      } else {
-        value = strVal;
-      }
-    }
-    try {
-      return typeConverter.convertIfNecessary(value, requiredType);
-    } catch (TypeMismatchException e) {
-      throw new IllegalArgumentException(
-          "Failed to convert value of parameter '" + paramName + "' to required type '" + requiredType.getName() + "'");
-    }
   }
 
   public Map<Path, IFunctionHandler> getFunctionHandlerMap() {

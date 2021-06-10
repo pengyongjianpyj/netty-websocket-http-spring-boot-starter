@@ -1,16 +1,13 @@
-package org.pyj.demo;
+package org.pyj.demo.websocket;
 
 import io.netty.handler.codec.http.HttpHeaders;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.pyj.yeauty.annotation.OnClose;
-import org.pyj.yeauty.annotation.OnError;
-import org.pyj.yeauty.annotation.OnMessage;
-import org.pyj.yeauty.annotation.OnOpen;
-import org.pyj.yeauty.annotation.RequestParam;
 import org.pyj.yeauty.annotation.ServerPath;
+import org.springframework.stereotype.Component;
 import org.pyj.yeauty.pojo.Session;
+
+import java.util.Map;
 
 /**
  * @author pengyongjian
@@ -19,11 +16,11 @@ import org.pyj.yeauty.pojo.Session;
  */
 @Component
 @Slf4j
-@ServerPath(path = "/connect2")
-public class WebSocket2 {
+@ServerPath(path = "/connect")
+public class WebSocket {
 
-    @OnOpen
-    public void onOpen(Session session, @RequestParam Map<String, Object> map, HttpHeaders headers) {
+    @org.pyj.yeauty.annotation.OnOpen
+    public void onOpen(Session session, @org.pyj.yeauty.annotation.RequestParam Map<String, Object> map, HttpHeaders headers) {
         System.out.println(session.id());
     }
 
@@ -31,11 +28,11 @@ public class WebSocket2 {
     public void onClose(Session session) {
     }
 
-    @OnError
+    @org.pyj.yeauty.annotation.OnError
     public void onError(Session session, Throwable throwable) {
     }
 
-    @OnMessage
+    @org.pyj.yeauty.annotation.OnMessage
     public void OnMessage(Session session, String message) {
         System.out.println(message);
     }

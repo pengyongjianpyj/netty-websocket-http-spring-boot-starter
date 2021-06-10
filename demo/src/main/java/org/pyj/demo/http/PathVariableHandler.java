@@ -1,5 +1,5 @@
 
-package org.pyj.demo.handler;
+package org.pyj.demo.http;
 
 import org.pyj.http.NettyHttpRequest;
 import org.pyj.http.annotation.NettyHttpHandler;

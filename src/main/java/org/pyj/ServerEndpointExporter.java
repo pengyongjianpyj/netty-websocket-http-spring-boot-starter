@@ -78,7 +78,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
     ApplicationContext context = getApplicationContext();
     String[] endpointBeanNames = context.getBeanNamesForAnnotation(ServerPath.class);
     if (endpointBeanNames.length == 0) {
-      logger.error("<artifactId>netty-websocket-spring-boot-starter</artifactId> no @ServerEndpoint class ");
+      logger.error("<artifactId>netty-websocket-http-spring-boot-starter</artifactId> no @ServerPath class ");
     }
 
     // 创建websocket的业务对象
@@ -91,7 +91,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
       }
       // 解析获取websocket的路径path
       String path = annotation.value();
-
+      logger.info("WebSocket Path : " + path);
 
       // 获取websocket方法并生成映射pojoMethodMapping
       PojoMethodMapping pojoMethodMapping = null;
@@ -173,9 +173,11 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         boss.shutdownGracefully().syncUninterruptibly();
         worker.shutdownGracefully().syncUninterruptibly();
       }));
-      logger.info("===== Netty WebSocket started on port:" + port + " =====");
+      logger.info("=======================================================");
+      logger.info("===== Netty WebSocket & Http started on port:" + port + " =====");
+      logger.info("=======================================================");
     } catch (Exception e) {
-      logger.error("websocket init fail", e);
+      logger.error("sever init fail", e);
     }
   }
 
@@ -218,6 +220,9 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
     HashMap<Path, IFunctionHandler> functionHandlerMap = new HashMap<>();
     ApplicationContext applicationContext = getApplicationContext();
     Map<String, Object> handlers = applicationContext.getBeansWithAnnotation(NettyHttpHandler.class);
+    if (handlers.size() == 0) {
+      logger.error("<artifactId>netty-websocket-http-spring-boot-starter</artifactId> no @NettyHttpHandler class ");
+    }
     for (Map.Entry<String, Object> entry : handlers.entrySet()) {
       Object handler = entry.getValue();
       Path path = Path.make(handler.getClass().getAnnotation(NettyHttpHandler.class));
@@ -225,7 +230,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         logger.error("IFunctionHandler has duplicated :" + path.toString(), new IllegalPathDuplicatedException());
         System.exit(0);
       }
-      logger.info(path.toString());
+      logger.info("Http Path : " + path.toString());
       functionHandlerMap.put(path, (IFunctionHandler) handler);
     }
     return functionHandlerMap;

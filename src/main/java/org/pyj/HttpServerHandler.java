@@ -265,12 +265,14 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
     ctx.executor().parent().execute(() -> {
       FullHttpResponse response = handleHttpRequest(new NettyHttpRequest(request));
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+      ReferenceCountUtil.release(request);
     });
   }
 
   private FullHttpResponse handleHttpRequest(NettyHttpRequest request) {
     IFunctionHandler functionHandler = null;
     try {
+      Thread.sleep(10000L);
       functionHandler = matchFunctionHandler(request);
       Object response = functionHandler.execute(request);
       return NettyHttpResponse.ok(response.toString());

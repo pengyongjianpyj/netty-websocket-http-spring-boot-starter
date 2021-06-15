@@ -262,14 +262,10 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
    * @return: void
    */
   private void channelReadHttp(ChannelHandlerContext ctx, FullHttpRequest request) {
-    FullHttpRequest copyRequest = request.copy();
-    ctx.executor().execute(() -> onReceivedRequest(ctx, new NettyHttpRequest(copyRequest)));
-  }
-
-  private void onReceivedRequest(ChannelHandlerContext context, NettyHttpRequest request) {
-    FullHttpResponse response = handleHttpRequest(request);
-    context.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-    ReferenceCountUtil.release(request);
+    ctx.executor().parent().execute(() -> {
+      FullHttpResponse response = handleHttpRequest(new NettyHttpRequest(request));
+      ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    });
   }
 
   private FullHttpResponse handleHttpRequest(NettyHttpRequest request) {

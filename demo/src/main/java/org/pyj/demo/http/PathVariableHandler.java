@@ -21,7 +21,7 @@ public class PathVariableHandler implements IFunctionHandler<String> {
          * 通过请求uri获取到path参数
          */
         String id = request.getStringPathValue(3);
-
+        System.out.println(id);
         return new ResultJson<String>(200, id);
     }
 }

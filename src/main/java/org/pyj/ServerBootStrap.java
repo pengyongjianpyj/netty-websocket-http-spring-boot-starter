@@ -46,7 +46,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
  * @date 2020-03-17 15:52
  */
 @Slf4j
-public class ServerEndpointExporter extends ApplicationObjectSupport
+public class ServerBootStrap extends ApplicationObjectSupport
     implements SmartInitializingSingleton, BeanFactoryAware {
 
   @Autowired
@@ -59,7 +59,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
 
   @Override
   public void afterSingletonsInstantiated() {
-    runServer();
+    init();
   }
 
   @Override
@@ -71,9 +71,9 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
     this.beanFactory = (AbstractBeanFactory) beanFactory;
   }
 
-  private void runServer() {
+  private void init() {
     // 获取配置信息并封装到serverEndpointConfig中
-    ServerEndpointConfig serverEndpointConfig = buildConfig();
+    ServerEndpointConfig config = buildConfig();
     // 获取websocket类，及其注解配置信息
     ApplicationContext context = getApplicationContext();
     String[] endpointBeanNames = context.getBeanNamesForAnnotation(ServerPath.class);
@@ -82,7 +82,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
     }
 
     // 创建websocket的业务对象
-    PojoEndpointServer pojoEndpointServer = new PojoEndpointServer(serverEndpointConfig);
+    PojoEndpointServer pojoEndpointServer = new PojoEndpointServer(config);
     for (String endpointBeanName : endpointBeanNames) {
       Class<?> endpointClass = context.getType(endpointBeanName);
       ServerPath annotation = AnnotatedElementUtils.findMergedAnnotation(endpointClass, ServerPath.class);
@@ -98,25 +98,23 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
       try {
         pojoMethodMapping = new PojoMethodMapping(endpointClass, context, beanFactory);
       } catch (DeploymentException e) {
-        throw new IllegalStateException("Failed to register ServerEndpointConfig: " + serverEndpointConfig, e);
+        throw new IllegalStateException("Failed to register ServerEndpointConfig: " + config, e);
       }
       pojoEndpointServer.addPathPojoMethodMapping(path, pojoMethodMapping);
     }
     // 创建处理业务类对象
-    WebSocketServerHandler webSocketServerHandler = new WebSocketServerHandler(pojoEndpointServer);
+    WebSocketServerHandler webSocketServerHandler = new WebSocketServerHandler(pojoEndpointServer, config);
     // 获取http接口的路径接口映射关系
     Map<Path, IFunctionHandler> functionHandlerMap = getFunctionHandlerMap();
     // 创建http处理业务类对象
-    HttpServerHandler httpServerHandler = new HttpServerHandler(pojoEndpointServer, serverEndpointConfig,
-        functionHandlerMap, webSocketServerHandler);
+    HttpServerHandler httpServerHandler = new HttpServerHandler(webSocketServerHandler, functionHandlerMap);
     // netty的web容器的启动
-    init(serverEndpointConfig.getPort(), httpServerHandler);
+    runServer(config, httpServerHandler);
 
   }
 
-  private void init(int port, HttpServerHandler httpServerHandler) {
+  private void runServer(ServerEndpointConfig config, HttpServerHandler httpServerHandler) {
     try {
-      ServerEndpointConfig config = httpServerHandler.getConfig();
       EventLoopGroup boss = new NioEventLoopGroup(config.getBossLoopGroupThreads());
       EventLoopGroup worker = new NioEventLoopGroup(config.getWorkerLoopGroupThreads());
       ServerBootstrap bootstrap = new ServerBootstrap();
@@ -174,7 +172,7 @@ public class ServerEndpointExporter extends ApplicationObjectSupport
         worker.shutdownGracefully().syncUninterruptibly();
       }));
       logger.info("=======================================================");
-      logger.info("===== Netty WebSocket & Http started on port:" + port + " =====");
+      logger.info("===== Netty WebSocket & Http started on port:" + config.getPort() + " =====");
       logger.info("=======================================================");
     } catch (Exception e) {
       logger.error("sever init fail", e);

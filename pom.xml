@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.pyj</groupId>
+    <groupId>io.github.pengyongjianpyj</groupId>
     <artifactId>netty-websocket-http-spring-boot-starter</artifactId>
     <version>0.1.0</version>
 
@@ -16,7 +16,7 @@
 
     <developers>
         <developer>
-            <name>pyj</name>
+            <name>pengyongjianpyj</name>
             <email>pengyongjianpyj@163.com</email>
         </developer>
     </developers>

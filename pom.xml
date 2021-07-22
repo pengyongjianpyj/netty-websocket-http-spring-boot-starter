@@ -14,6 +14,17 @@
     </description>
     <url>https://github.com/pengyongjianpyj/netty-websocket-http-spring-boot-starter</url>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/pengyongjianpyj/netty-websocket-http-spring-boot-starter.git</connection>
+        <developerConnection>scm:git:https://github.com/pengyongjianpyj/netty-websocket-http-spring-boot-starter.git</developerConnection>
+        <url>git:https://github.com/pengyongjianpyj/netty-websocket-http-spring-boot-starter.git</url>
+    </scm>
     <developers>
         <developer>
             <name>pengyongjianpyj</name>

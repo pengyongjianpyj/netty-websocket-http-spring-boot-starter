@@ -5,6 +5,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.springframework.stereotype.Component;
 
 /**
  * @Description: 用于注解接收http请求的类
@@ -14,6 +15,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Component
 public @interface NettyHttpHandler {
   /**
    * 请求路径
